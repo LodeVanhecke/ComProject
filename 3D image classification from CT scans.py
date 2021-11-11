@@ -88,17 +88,50 @@ normal_scans = np.array([process_scan(path) for path in normal_scan_paths[1:3]])
 abnormal_labels = np.array([1 for _ in range(len(abnormal_scans))])
 normal_labels = np.array([0 for _ in range(len(normal_scans))])
 
-print(abnormal_labels)
-print(normal_labels)
-'''
+print(len(abnormal_scans))
+print(len(normal_scans))
+
+Percent_abn = len(abnormal_scans)*80//100
+Percent_n = len(normal_scans)*80//100
 
 # Split data in the ratio 70-30 for training and validation.
-x_train = np.concatenate((abnormal_scans[:70], normal_scans[:70]), axis=0)
-y_train = np.concatenate((abnormal_labels[:70], normal_labels[:70]), axis=0)
-x_val = np.concatenate((abnormal_scans[70:], normal_scans[70:]), axis=0)
-y_val = np.concatenate((abnormal_labels[70:], normal_labels[70:]), axis=0)
+x_train = np.concatenate((abnormal_scans[:Percent_abn], normal_scans[:Percent_n]), axis=0)
+y_train = np.concatenate((abnormal_labels[:Percent_abn], normal_labels[:Percent_n]), axis=0)
+x_val = np.concatenate((abnormal_scans[Percent_abn:], normal_scans[Percent_n:]), axis=0)
+y_val = np.concatenate((abnormal_labels[Percent_abn:], normal_labels[Percent_n:]), axis=0)
 print(
     "Number of samples in train and validation are %d and %d."
     % (x_train.shape[0], x_val.shape[0])
 )
-'''
+
+@tf.function
+def rotate(volume):
+    """Rotate the volume by a few degrees"""
+
+    def scipy_rotate(volume):
+        # define some rotation angles
+        angles = [-20, -10, -5, 5, 10, 20]
+        # pick angles at random
+        angle = random.choice(angles)
+        # rotate volume
+        volume = ndimage.rotate(volume, angle, reshape=False)
+        volume[volume < 0] = 0
+        volume[volume > 1] = 1
+        return volume
+
+    augmented_volume = tf.numpy_function(scipy_rotate, [volume], tf.float32)
+    return augmented_volume
+
+
+def train_preprocessing(volume, label):
+    """Process training data by rotating and adding a channel."""
+    # Rotate volume
+    volume = rotate(volume)
+    volume = tf.expand_dims(volume, axis=3)
+    return volume, label
+
+
+def validation_preprocessing(volume, label):
+    """Process validation data by only adding a channel."""
+    volume = tf.expand_dims(volume, axis=3)
+    return volume, label
