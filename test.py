@@ -85,8 +85,8 @@ print("CT scans with abnormal lung tissue: " + str(len(abnormal_scan_paths)))
 
 # Read and process the scans.
 # Each scan is resized across height, width, and depth and rescaled.
-abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths[1:25]])
-normal_scans = np.array([process_scan(path) for path in normal_scan_paths[1:25]])
+abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths[1:100]])
+normal_scans = np.array([process_scan(path) for path in normal_scan_paths[1:100]])
 
 print(normal_scans.shape)
 print(abnormal_scans.shape)
@@ -119,7 +119,7 @@ print(
 #print(train_loader.shape)
 #print(validation_loader.shape)
 
-batch_size = 1
+batch_size = 2
 
 '''
 model = models.Sequential([
@@ -151,13 +151,13 @@ model = models.Sequential([
   layers.Conv2D(16, 4, padding='same', activation='relu'),                           # ReLU (rectified linear activation function) is almost linear (can bend to approx. data)
   layers.MaxPooling2D(),
   layers.Dropout(0.5),
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.Conv2D(64, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
   layers.Dropout(0.5),                                                               # Randomly drops out 50% of output
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.Conv2D(128, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
   layers.Dropout(0.5),
-  layers.Conv2D(16, 3, padding='same', activation='relu'),
+  layers.Conv2D(256, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
   layers.Dropout(0.5),
   layers.Flatten(),                                                                  # Flatten tensor to 1D
