@@ -24,7 +24,7 @@ def normalize(volume):
     volume[volume > max] = max
     volume = (volume - min) / (max - min)
     volume = volume.astype("float32")
-    print('1')
+    #print('1')
     return volume
 
 
@@ -85,8 +85,8 @@ print("CT scans with abnormal lung tissue: " + str(len(abnormal_scan_paths)))
 
 # Read and process the scans.
 # Each scan is resized across height, width, and depth and rescaled.
-abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths[1:100]])
-normal_scans = np.array([process_scan(path) for path in normal_scan_paths[1:100]])
+abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
+normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
 
 print(normal_scans.shape)
 print(abnormal_scans.shape)
@@ -121,51 +121,28 @@ print(
 
 batch_size = 2
 
-'''
-model = models.Sequential([
-  layers.Conv3D(filters=64, kernel_size=3, activation="relu", input_shape=(128, 128, 64, 1)),
-  layers.MaxPool3D(pool_size=2),
-  layers.BatchNormalization(),
-  layers.Conv3D(filters=64, kernel_size=3, activation="relu"),
-  layers.MaxPool3D(pool_size=2),
-  layers.BatchNormalization(),
-  layers.Conv3D(filters=128, kernel_size=3, activation="relu"),
-  layers.MaxPool3D(pool_size=2),
-  layers.BatchNormalization(),
-  layers.Conv3D(filters=256, kernel_size=3, activation="relu"),
-  layers.MaxPool3D(pool_size=2),
-  layers.BatchNormalization(),
-  layers.Flatten(),
-  layers.GlobalAveragePooling3D(),
-  layers.Dense(units=512, activation="relu"),
-  layers.Dropout(0.3),
-  layers.Dense(128, activation='relu'),
-  layers.Dense(2, activation='softmax')
-])
-'''
-
 model = models.Sequential([
   layers.Conv2D(16, 4, padding='same', activation='relu', input_shape=(128, 128, 64)), # Convolitional layer with use of 3x3 filters # Padding so there is no data loss on the edge ( same = padding)
   layers.MaxPooling2D(),                                                             # Reduce dimensions of data together to reduce computation
-  layers.Dropout(0.5),
-  layers.Conv2D(16, 4, padding='same', activation='relu'),                           # ReLU (rectified linear activation function) is almost linear (can bend to approx. data)
+  layers.Dropout(0.3),
+  layers.Conv2D(32, 4, padding='same', activation='relu'),                           # ReLU (rectified linear activation function) is almost linear (can bend to approx. data)
   layers.MaxPooling2D(),
-  layers.Dropout(0.5),
+  layers.Dropout(0.3),
   layers.Conv2D(64, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Dropout(0.5),                                                               # Randomly drops out 50% of output
+  layers.Dropout(0.3),                                                               # Randomly drops out 50% of output
   layers.Conv2D(128, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Dropout(0.5),
+  layers.Dropout(0.3),
   layers.Conv2D(256, 3, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Dropout(0.5),
+  layers.Dropout(0.3),
   layers.Flatten(),                                                                  # Flatten tensor to 1D
   layers.Dense(128, activation='relu'),                                              # Each neuron of this layer gets an input from each neuron of previous layer
   layers.Dense(2, activation='softmax')                                    # Number of output classes
 ])
 
-epochs = 100
+epochs = 10
 model.summary()
 
 model.compile(optimizer='adam',                                                     # Gradient descent method
