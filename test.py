@@ -14,6 +14,7 @@ def read_nifti_file(filepath):
     scan = nib.load(filepath)
     # Get raw data
     scan = scan.get_fdata()
+    #print(type(scan))
     return scan
 
 def normalize(volume):
@@ -24,7 +25,7 @@ def normalize(volume):
     volume[volume > max] = max
     volume = (volume - min) / (max - min)
     volume = volume.astype("float32")
-    #print('1')
+    #print(type(volume))
     return volume
 
 
@@ -99,8 +100,8 @@ normal_labels = np.array([0 for _ in range(len(normal_scans))])
 print(len(abnormal_scans))
 print(len(normal_scans))
 
-Percent_abn = len(abnormal_scans)*80//100
-Percent_n = len(normal_scans)*80//100
+Percent_abn = len(abnormal_scans)*70//100
+Percent_n = len(normal_scans)*70//100
 
 # Split data in the ratio 70-30 for training and validation.
 x_train = np.concatenate((abnormal_scans[:Percent_abn], normal_scans[:Percent_n]), axis=0)
@@ -112,41 +113,51 @@ print(
     % (x_train.shape[0], x_val.shape[0])
 )
 
-# Define data loaders.
-#train_loader = tf.data.Dataset.from_tensor_slices((x_train, y_train))
-#validation_loader = tf.data.Dataset.from_tensor_slices((x_val, y_val))
+def rotate(volume):
+    # define some rotation angles
+    angles = [-20, -10, -5, 5, 10, 20]
+    # pick angles at random
+    angle = random.choice(angles)
+    # rotate volume
+    volume = ndimage.rotate(volume, angle, reshape=False)
+    volume[volume < 0] = 0
+    volume[volume > 1] = 1
+    return volume
 
-#print(train_loader.shape)
-#print(validation_loader.shape)
+print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
+
+x_train = np.array([rotate(x) for x in x_train])
+
+print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
 
 batch_size = 2
 
 model = models.Sequential([
   layers.Conv2D(16, 4, padding='same', activation='relu', input_shape=(128, 128, 64)), # Convolitional layer with use of 3x3 filters # Padding so there is no data loss on the edge ( same = padding)
-  layers.MaxPooling2D(),                                                             # Reduce dimensions of data together to reduce computation
-  layers.Dropout(0.3),
-  layers.Conv2D(32, 4, padding='same', activation='relu'),                           # ReLU (rectified linear activation function) is almost linear (can bend to approx. data)
+  layers.MaxPooling2D(),                                                               # Reduce dimensions of data together to reduce computation
+  layers.Dropout(0.4),
+  layers.Conv2D(16, 4, padding='same', activation='relu'),                             # ReLU (rectified linear activation function) is almost linear (can bend to approx. data)
   layers.MaxPooling2D(),
-  layers.Dropout(0.3),
-  layers.Conv2D(64, 3, padding='same', activation='relu'),
+  layers.Dropout(0.4),
+  layers.Conv2D(16, 4, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Dropout(0.3),                                                               # Randomly drops out 50% of output
-  layers.Conv2D(128, 3, padding='same', activation='relu'),
+  layers.Dropout(0.4),                                                                 # Randomly drops out 50% of output
+  layers.Conv2D(16, 4, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Dropout(0.3),
-  layers.Conv2D(256, 3, padding='same', activation='relu'),
+  layers.Dropout(0.4),
+  layers.Conv2D(16, 4, padding='same', activation='relu'),
   layers.MaxPooling2D(),
-  layers.Dropout(0.3),
+  layers.Dropout(0.4),
   layers.Flatten(),                                                                  # Flatten tensor to 1D
   layers.Dense(128, activation='relu'),                                              # Each neuron of this layer gets an input from each neuron of previous layer
-  layers.Dense(2, activation='softmax')                                    # Number of output classes
+  layers.Dense(2, activation='softmax')                                              # Number of output classes
 ])
 
 epochs = 10
 model.summary()
 
 model.compile(optimizer='adam',                                                     # Gradient descent method
-              loss='sparse_categorical_crossentropy', # Computes the crossentropy loss between the labels and predictions
+              loss='sparse_categorical_crossentropy',                               # Computes the crossentropy loss between the labels and predictions
               metrics=['accuracy'])
 
 # Train model
@@ -172,7 +183,7 @@ plt.legend(loc='lower right')
 plt.title('Training and Validation Accuracy')
 
 plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Training Loss')
+plt.plot(epochs_range, loss, label='Training Looss')
 plt.plot(epochs_range, val_loss, label='Validation Loss')
 plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
