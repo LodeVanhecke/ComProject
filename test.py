@@ -5,6 +5,7 @@ import tensorflow as tf
 import nibabel as nib
 import random
 from scipy import ndimage
+from sklearn.utils import shuffle
 from tensorflow import keras
 from tensorflow.python.keras import datasets, layers, models, losses
 
@@ -108,6 +109,11 @@ x_train = np.concatenate((abnormal_scans[:Percent_abn], normal_scans[:Percent_n]
 y_train = np.concatenate((abnormal_labels[:Percent_abn], normal_labels[:Percent_n]), axis=0)
 x_val = np.concatenate((abnormal_scans[Percent_abn:], normal_scans[Percent_n:]), axis=0)
 y_val = np.concatenate((abnormal_labels[Percent_abn:], normal_labels[Percent_n:]), axis=0)
+
+# Randomly scramble data and labels
+x_train, y_train = shuffle(x_train, y_train)
+x_val, y_val = shuffle(x_val, y_val)
+
 print(
     "Number of samples in train and validation are %d and %d."
     % (x_train.shape[0], x_val.shape[0])
@@ -115,7 +121,7 @@ print(
 
 def rotate(volume):
     # define some rotation angles
-    angles = [-20, -10, -5, 5, 10, 20]
+    angles = [-80, -40, -20, -10, -5, 5, 10, 20, 40, 80]
     # pick angles at random
     angle = random.choice(angles)
     # rotate volume
@@ -128,12 +134,15 @@ print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
 
 x_train = np.array([rotate(x) for x in x_train])
 
+#data_augmentation = keras.Sequential([
+#    layers.RandomFlip("horizontal", input_shape=(128, 128, 64),
+#    layers.RandomRotation(0.1),
+#    layers.RandomZoom(0.1),
+#])
+
 print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
-
-batch_size = 2
-
 model = models.Sequential([
-  layers.Conv2D(16, 4, padding='same', activation='relu', input_shape=(128, 128, 64)), # Convolitional layer with use of 3x3 filters # Padding so there is no data loss on the edge ( same = padding)
+  layers.Conv2D(16, 4, padding='same', activation='relu', input_shape=(128, 128, 64)), # Convolitional layer with use of 4x4 filters # Padding so there is no data loss on the edge ( same = padding)
   layers.MaxPooling2D(),                                                               # Reduce dimensions of data together to reduce computation
   layers.Dropout(0.4),
   layers.Conv2D(16, 4, padding='same', activation='relu'),                             # ReLU (rectified linear activation function) is almost linear (can bend to approx. data)
@@ -152,6 +161,8 @@ model = models.Sequential([
   layers.Dense(128, activation='relu'),                                              # Each neuron of this layer gets an input from each neuron of previous layer
   layers.Dense(2, activation='softmax')                                              # Number of output classes
 ])
+'''
+batch_size = 2
 
 epochs = 10
 model.summary()
@@ -189,3 +200,4 @@ plt.legend(loc='upper right')
 plt.title('Training and Validation Loss')
 plt.savefig('Loss_acc.png')
 plt.show()
+'''
