@@ -56,13 +56,12 @@ def resize_image(image):
 
 def process_scan(path):
     # Read scan
-    volume = read_file(path)
+    image = read_file(path)
     # Normalize
     image = normalize(image)
     # Resize image using previously defined resize_image(image)
     image = resize_image(image)
     return image
-
 
 # Folder "CT-0" consist of CT scans having normal lung tissue,
 # no CT-signs of viral pneumonia.
@@ -85,11 +84,8 @@ print("CT scans with abnormal lung tissue: " + str(len(abnormal_scan_paths)))
 
 # Read and process the scans.
 # Each scan is resized across height, width, and depth and rescaled.
-abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
-normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
-
-#abnormal_scans = abnormal_scans[100:]
-#normal_scans = normal_scans[100:]
+abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths[:245]])
+normal_scans = np.array([process_scan(path) for path in normal_scan_paths[:245]])
 
 # Randomly scramble data
 abnormal_scans = shuffle(abnormal_scans)
