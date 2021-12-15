@@ -72,7 +72,6 @@ normal_scan_paths = [
 
 # Folder "CT-1 and CT-2" consist of CT scans havinginvolvement of lung parenchyma is less than 25% and ground-glass opacifications,
 # and involvement of lung parenchyma is between 25 and 50% respectively
-
 abnormal_scan_paths = [
     os.path.join(os.getcwd(), ".\COVID19_1110\studies\CT-1", x)
     for x in os.listdir(".\COVID19_1110\studies\CT-1")] + [os.path.join(os.getcwd(), ".\COVID19_1110\studies\CT-2", x)
@@ -84,8 +83,8 @@ print("CT scans with abnormal lung tissue: " + str(len(abnormal_scan_paths)))
 
 # Read and process the scans.
 # Each scan is resized across height, width, and depth and rescaled.
-abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths[:245]])
-normal_scans = np.array([process_scan(path) for path in normal_scan_paths[:245]])
+abnormal_scans = np.array([process_scan(path) for path in abnormal_scan_paths])
+normal_scans = np.array([process_scan(path) for path in normal_scan_paths])
 
 # Randomly scramble data
 abnormal_scans = shuffle(abnormal_scans)
@@ -102,10 +101,10 @@ normal_labels = np.array([0 for _ in range(len(normal_scans))])
 print(len(abnormal_scans))
 print(len(normal_scans))
 
-Percent_abn = len(abnormal_scans)*60//100
-Percent_n = len(normal_scans)*60//100
+Percent_abn = len(abnormal_scans)*70//100
+Percent_n = len(normal_scans)*70//100
 
-# Split data in the ratio 60-40 for training and validation.
+# Split data in the ratio 70-30 for training and validation.
 x_train = np.concatenate((abnormal_scans[:Percent_abn], normal_scans[:Percent_n]), axis=0)
 y_train = np.concatenate((abnormal_labels[:Percent_abn], normal_labels[:Percent_n]), axis=0)
 x_val = np.concatenate((abnormal_scans[Percent_abn:], normal_scans[Percent_n:]), axis=0)
@@ -124,41 +123,41 @@ print(len(x_train))
 
 print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
 
-batch_size = 16
+batch_size = 4
 
 datagen = ImageDataGenerator(
-        rotation_range=90,
-        zoom_range=0.2,
-        horizontal_flip=True,
-        vertical_flip=True)
+        rotation_range = 90,
+        zoom_range = 0.2,
+        horizontal_flip = True,
+        vertical_flip = True)
 
-training_generator = datagen.flow(x_train, y_train, batch_size=batch_size)
+training_generator = datagen.flow(x_train, y_train, batch_size = batch_size)
 
 print(len(training_generator))
 
 steps_per_epoch = len(x_train)//batch_size
 
 model = models.Sequential([
-  layers.Conv2D(8, 3, padding='same', activation='relu', input_shape=(128, 128, 64)),
+  layers.Conv2D(4, 3, padding = 'same', activation = 'relu', input_shape = (128, 128, 64)),
   layers.MaxPooling2D(),
-  layers.Dropout(0.5),
-  layers.Conv2D(16, 3, padding='same', activation='relu', input_shape=(128, 128, 64)),
+  layers.Dropout(0.8),
+  layers.Conv2D(8, 3, padding = 'same', activation = 'relu', input_shape = (128, 128, 64)),
   layers.MaxPooling2D(),
-  layers.Dropout(0.5),
+  layers.Dropout(0.8),
   layers.Flatten(),
-  layers.Dense(32, activation='relu'),
-  layers.Dense(2, activation='softmax')
+  layers.Dense(8, activation = 'relu'),
+  layers.Dense(2, activation = 'softmax')
 ])
 
-epochs = 100
+epochs = 200
 model.summary()
 
-model.compile(optimizer='adam',                                                     # Gradient descent method
-              loss='sparse_categorical_crossentropy',                               # Computes the crossentropy loss between the labels and predictions
-              metrics=['accuracy'])
+model.compile(optimizer = 'adam',                                                     # Gradient descent method
+              loss = 'sparse_categorical_crossentropy',                               # Computes the crossentropy loss between the labels and predictions
+              metrics = ['accuracy'])
 
 # Train model
-history = model.fit(training_generator, steps_per_epoch=steps_per_epoch,epochs=epochs, batch_size=batch_size,validation_data=(x_val, y_val))
+history = model.fit(training_generator, steps_per_epoch=steps_per_epoch, epochs=epochs, batch_size=batch_size, validation_data=(x_val, y_val))
 
 np.save('my_history.npy', history.history)
 
